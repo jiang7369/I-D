@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        font-size: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        text-align: center;
+      }
+      h1 { font-size: 32px }
+      a { font-size: 16px }
+      h2 { font-size: 24px }
+      span { font-size: 24px }
+      p {
+        display: inline-block;
+        width: 302px;
+        padding: 7px;
+        font-size: 20px;
+        word-break: break-all;
+      }
+      div {
+        display: inline-block;
+        width: 79px;
+        padding: 7px;
+        font-size: 20px;
+      }
+      button { padding: 6px; font-size: 20px }
+      input { width: 300px; padding: 6px; font-size: 20px }
+      textarea {
+        width: 62vw;
+        height: 62vh;
+        padding: 6px;
+        font-size: 20px;
+        vertical-align: bottom;
+      }
+    </style>
+    <script>
+      const TAGS = {}
+      window.onload = function () {
+        [...document.all].forEach(tag => TAGS[tag.localName] = tag)
+      }
+
+      let peerConnection, dataChannel
+
+      function deconvert (uri) {
+        const s = uri.replace(/wr:\/(\/.*?\/){0,1}/, '')
+        return [
+          new Array(33).fill().map((_, i) => atob(s.substring(0, 44)).charCodeAt(i)),
+        ].map((x) => `v=0\r\no=- 0 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\na=candidate:0 1 udp 0 ${s
+              .substring(s.indexOf("?h=") + 3)
+              .replace(":", " ")} typ host generation 0\r\na=ice-ufrag:${s.substring(
+              68,
+              s.indexOf("?h=")
+            )}\r\na=ice-pwd:${s.substring(
+              44,
+              44 + x[x.length - 1]
+            )}\r\na=fingerprint:sha-256 ${x
+              .map((x) => x.toString(16).toUpperCase())
+              .map((x) => (x.length === 1 ? "0" + x : x))
+              .join(":")
+              .substring(0, 95)}\r\n`
+        )[0]
+      }
+      function convert (sdp, host) {
+        return "wr:/" + (host ? `/${ host }/` : '') + sdp.split(
+          /a=candidate:.+? .+? .+? .+? (.+? .+?) .+\r\n|a=ice-ufrag:(.+)\r\n|a=ice-pwd:(.+)\r\n|a=fingerprint:sha-256 (.+)\r\n/
+        )
+        .filter((x, i) => i % 5 && x)
+        .reverse()
+        .slice(0, 4)
+        .map((x, i) =>
+          i
+            ? i > 2
+              ? `?h=${x.replace(" ", ":")}`
+              : x
+            : window.btoa(
+                String.fromCharCode.apply(
+                  null,
+                  (x + ":18").split(":").map((h) => `0x${h}`)
+                )
+              )
+        )
+        .join("")
+      }
+
+      function connect (uri, callback, onmessage) {
+        const host = uri.split(/wr:\/(\/(.*?)\/){0,1}/)[2] || ''
+
+        peerConnection = new RTCPeerConnection(host ? {
+          iceServers: [{ url: `stun:${ host }` }],
+        } : {})
+
+        peerConnection.setRemoteDescription({
+          type: "offer",
+          sdp: deconvert(uri),
+        })
+
+        peerConnection.ondatachannel = (e) =>
+          ((dataChannel = e.channel).onmessage = e => onmessage(JSON.parse(e.data)))
+
+        return new Promise((resolve, reject) => {
+          peerConnection.onicecandidate = () => resolve(callback(
+            convert(peerConnection.localDescription.sdp, host)
+          ))
+          peerConnection.createAnswer().then(answer =>
+            peerConnection.setLocalDescription(answer)
+          )
+        })
+      }
+
+      const steps = ['Start', 'this step in inviter.html', 'Connect', 'this step in inviter.html', 'Connected']
+      const stepMessages = [
+        'Start',
+        '// this step in invitee.html',
+        'Paste Inviter URI & Click Connect',
+        '// this step in inviter.html',
+        'Input in Textarea & see Inviter',
+      ]
+      let stepIndex = 2
+      async function nextStep () {
+        if (steps[stepIndex] === 'Connect') {
+          const uri = TAGS.input.value
+
+          TAGS.button.disabled = true
+          TAGS.button.innerText = steps[4]
+          TAGS.input.disabled = true
+
+          await connect(
+            uri,
+            uri => TAGS.p.innerText = uri,
+            data => TAGS.textarea.value = data,
+          )
+          TAGS.article.style.display = 'block'
+
+          TAGS.textarea.placeholder = 'Input in here'
+          TAGS.textarea.disabled = false
+
+          stepIndex = 4
+        }
+
+        TAGS.span.innerText = `${stepIndex} (${stepMessages[stepIndex]})`
+      }
+
+      function send (e) { dataChannel.send(JSON.stringify(e.target.value)) }
+
+      function copy (tag, msgTag) {
+        const range = document.createRange()
+        range.selectNodeContents(tag)
+        const selection = document.getSelection()
+        selection.empty()
+        selection.addRange(range)
+        document.execCommand('copy')
+        msgTag.innerText = 'Copied!!'
+      }
+    </script>
+    <title>Invitee</title>
+  </head>
+  <body>
+    <header>
+      <h1>Invitee</h1>
+      <a href="./invitee.html" target="_blank">Open in new Tab</a>
+      <h2>Step: <span>2 (Paste Inviter URI & Click Connect)</span></h2>
+    </header>
+    <aside>
+      <article style="display: none" onclick="copy(TAGS.p, TAGS.div)">
+        <p></p>
+        <div>Click to Copy</div>
+      </article>
+      <section>
+        <input type="text" placeholder="Place paste inviter's URI here" />
+        <button onclick="nextStep(event)">Connect</button>
+      </section>
+    </aside>
+    <main>
+      <textarea disabled oninput="send(event)"></textarea>
+    </main>
+  </body>
+</html>
