@@ -1,7 +1,7 @@
 ---
 title: The WebRTC URI Scheme
 abbrev:
-docname: draft-jiang7369-webrtc-uri-scheme-00
+docname: draft-jiang7369-webrtc-uri-scheme-01
 date: {DATE}
 category: std
 
@@ -86,12 +86,12 @@ This specification defines two URI schemes, using the ABNF syntax defined in RFC
        hostport = host [ ":" port ]
        host = <host, defined in [RFC3986], Section 3.2.2>
        port = <port, defined in [RFC3986], Section 3.2.3>
-       endpoint = basehash ufrag pwd
+       endpoint = basehash pwd ufrag
        query = <query, defined in [RFC3986], Section 3.4>
 
        basehash = 44<pchar>
-       ufrag = *255<pchar>
        pwd = *255<pchar>
+       ufrag = *255<pchar>
 ~~~
 
 See {{RFC3986, Section 3.3}} for a definition of pchar. Disallowed characters -- including non-ASCII characters -- MUST be encoded into UTF-8 {{!RFC3629}} and then percent-encoded ({{RFC3986, Section 2.1}}).
@@ -104,9 +104,9 @@ The ufrag component, pwd component and fingerprint used in basehash component be
 
 The basehash component MUST be calculated by the following steps:
 
-1.  get the length of ufrag component
+1.  get the length of pwd component
 
-2.  convert length of ufrag component to hexadecimal (1 Byte)
+2.  convert length of pwd component to hexadecimal (1 Byte)
 
 3.  get the fingerprint hexadecimal (32 Byte)
 
@@ -206,37 +206,37 @@ a=fingerprint:sha-256 B6:9E:F3:DD:8B:83:8D:F6:95:4E:76:40:AF:F2:78
 The ufrag component is "Yb1d".  
 The pwd component is "uCiLWVRLVIKkrl14SzyO4TMF"  
 The basehash component before Base64 is  
-0xB69EF3DD8B838DF6954E7640AFF2780BCA78DA0B73211E28934F70DA47B4417E04,  
+0xB69EF3DD8B838DF6954E7640AFF2780BCA78DA0B73211E28934F70DA47B4417E18,  
 The basehash component is  
-"tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4E"
+"tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4Y"
 
 So, the endpoint component is  
-"tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4EYb1duCiLWVRLVIKk  
-rl14SzyO4TMF"
+"tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4YuCiLWVRLVIKk  
+rl14SzyO4TMFYb1d"
 
 Without STUN or TURN:
 
 o&nbsp; If no STUN or TURN, expressed in "wr:///".  For example:
 
-       *  "wr:///tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4EYb1duCiLWV  
-          RLVIKkrl14SzyO4TMF?query=required&for&connect"
+       *  "wr:///tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4YuCiLWVRLVI
+          Kkrl14SzyO4TMFYb1d?query=required&for&connect"
 
 o&nbsp; Or omit "//", expressed in "wr:/".  For example:
 
-       *  "wr:/tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4EYb1duCiLWVRL  
-          VIKkrl14SzyO4TMF?query"
+       *  "wr:/tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2ke0QX4YuCiLWVRLVIKk  
+          rl14SzyO4TMFYb1d?query"
 
 With STUN or TURN:
 
 o&nbsp; Use STUN or TURN server, For example:
 
        *  "wr://host.example.com/tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w2  
-          ke0QX4EYb1duCiLWVRLVIKkrl14SzyO4TMF?query"
+          ke0QX4YuCiLWVRLVIKkrl14SzyO4TMFYb1d?query"
 
 o&nbsp; Use STUNs or TURNs server,  For example:
 
        *  "wrs://host.example.com/tp7z3YuDjfaVTnZAr/J4C8p42gtzIR4ok09w  
-          2ke0QX4EYb1duCiLWVRLVIKkrl14SzyO4TMF?query"
+          2ke0QX4YuCiLWVRLVIKkrl14SzyO4TMFYb1d?query"
 
 
 # Acknowledgements
