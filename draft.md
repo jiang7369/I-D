@@ -1,7 +1,7 @@
 ---
 title: The WebRTC URI Scheme
 abbrev:
-docname: draft-jiang7369-webrtc-uri-scheme-01
+docname: draft-jiang7369-webrtc-uri-scheme-02
 date: {DATE}
 category: std
 
@@ -54,7 +54,7 @@ URI is short and compact, convenient for transmission. You can even send it offl
 
 WebRTC is a widely used real-time connection protocol, but unlike WebSocket, it has no URI scheme.
 
-This document registers the "wr://" and "wrs://" URI schemes to aid prevention of such accidental disclosures.  When use the URI quickly open the connection, you can immediately to realize communication between two clients.
+This document registers the "wr://" and "wrs://" URI schemes to supplement such gaps.  When use the URI quickly open the connection, you can immediately to realize communication between two clients.
 
 Use this URI Scheme to easily open a connection. You can open a data channel, then the connection can be used as a file transfer or signalling server, etc. You can also directly open a stable and complex connection by passing more parameters.
 
